@@ -1,4 +1,5 @@
 import { useState } from "react";
+import BusinessEnquiryModal from "../common/BusinessEnquiryModal";
 
 const privacySections = [
   {
@@ -201,9 +202,10 @@ const privacySections = [
   },
 ];
 
-const PrivacyPolicy = () => {
+const DataPolicy = () => {
   const [activeSection, setActiveSection] = useState("collection");
   const [expandedItems, setExpandedItems] = useState({});
+  const [isEnquiryModalOpen, setIsEnquiryModalOpen] = useState(false);
 
   const toggleItem = (sectionId, index) => {
     const key = `${sectionId}-${index}`;
@@ -345,11 +347,11 @@ const PrivacyPolicy = () => {
                   <p className="text-gray-400 text-xs mb-4">
                     Contact our privacy team for any concerns about your data.
                   </p>
-                  <a
-                    href="mailto:privacy@planix.com"
+                  <button
+                    onClick={() => setIsEnquiryModalOpen(true)}
                     className="inline-flex items-center gap-2 text-green-400 text-sm font-medium hover:text-green-300 transition-colors"
                   >
-                    privacy@planix.com
+                   contact@plannix.in
                     <svg
                       className="w-4 h-4"
                       fill="none"
@@ -363,7 +365,7 @@ const PrivacyPolicy = () => {
                         d="M14 5l7 7m0 0l-7 7m7-7H3"
                       />
                     </svg>
-                  </a>
+                  </button>
                 </div>
               </div>
             </div>
@@ -620,8 +622,13 @@ const PrivacyPolicy = () => {
           </div>
         </div>
       </div>
+      {/* Business Enquiry Modal */}
+      <BusinessEnquiryModal
+        isOpen={isEnquiryModalOpen}
+        onClose={() => setIsEnquiryModalOpen(false)}
+      />
     </section>
   );
 };
 
-export default PrivacyPolicy;
+export default DataPolicy;

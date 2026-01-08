@@ -30,16 +30,16 @@ const upcomingEventsData = [
   },
   {
     id: 3,
-    title: "Milestone Birthday Bash",
-    date: "Feb 5, 2026",
-    location: "Sky Lounge, Delhi",
+    title: "Busiiness Expo 2026",
+    date: "Feb 5-8, 2026",
+    location: "Pragati Maidan, New Delhi",
     description:
-      "A spectacular 50th birthday celebration with live entertainment, themed decorations, gourmet cuisine, and an unforgettable party atmosphere.",
-    attendees: 150,
-    category: "Birthday",
+      "India's largest business and technology exposition featuring 500+ exhibitors, networking opportunities, and keynote sessions from industry leaders across multiple sectors.",
+    attendees: 25000,
+    category: "Expo",
     image:
-      "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=600&h=400&fit=crop",
-    color: "from-amber-500 to-orange-600",
+      "https://img2.chinadaily.com.cn/images/202305/26/64704543a310b60580cdbf02.jpeg",
+    color: "from-blue-600 to-cyan-500",
   },
   {
     id: 4,
@@ -68,16 +68,16 @@ const upcomingEventsData = [
   },
   {
     id: 6,
-    title: "Sangeet Night Extravaganza",
-    date: "Mar 20, 2026",
-    location: "Royal Ballroom, Udaipur",
+    title: "International Yoga Day Retreat",
+    date: "Jun 21, 2026",
+    location: "Rishikesh Yoga Valley, Uttarakhand",
     description:
-      "A night of dance, music, and celebration! Professional choreography, live band, stunning stage setup, and memories to last a lifetime.",
-    attendees: 300,
-    category: "Sangeet",
+      "Celebrate International Yoga Day with sunrise sessions by the Ganges,Ayurvedic wellness programs, and teachings from renowned yoga masters in the yoga capital of the world.",
+    attendees: 1500,
+    category: "Wellness",
     image:
-      "https://images.unsplash.com/photo-1583939003579-730e3918a45a?w=600&h=400&fit=crop",
-    color: "from-fuchsia-500 to-purple-600",
+      "https://images.unsplash.com/photo-1545205597-3d9d02c29597?w=600&h=400&fit=crop",
+    color: "from-teal-500 to-green-600",
   },
 ];
 
@@ -356,17 +356,7 @@ const UpcomingEvents = () => {
                   </div>
                 </div>
 
-                {/* CTA Buttons */}
-                <div className="flex flex-wrap gap-4">
-                  <button
-                    className={`px-8 py-3 rounded-full font-semibold text-white bg-gradient-to-r ${activeEvent.color} shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300`}
-                  >
-                    Book Now
-                  </button>
-                  <button className="px-8 py-3 rounded-full font-semibold text-white border border-white/20 hover:bg-white/10 transition-all duration-300">
-                    Learn More
-                  </button>
-                </div>
+              
               </div>
 
               {/* Navigation Dots */}
@@ -442,7 +432,7 @@ const UpcomingEvents = () => {
                       <div
                         className={`w-full h-full rounded-lg overflow-hidden shadow-2xl transition-all duration-500 ${
                           isActive
-                            ? "shadow-md shadow-green-400 border border-green-700 "
+                            ? "shadow-md shadow-green-300 border border-green-700 "
                             : "opacity-90"
                         }`}
                         style={{

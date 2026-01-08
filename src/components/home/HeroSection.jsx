@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import AppComingSoonModal from "../common/AppComingSoonModal";
 
 // Event card data for the carousel rows with real images
 const eventCards = {
@@ -281,16 +282,42 @@ const CarouselRow = ({ cards, direction = "left", speed = 30 }) => {
   );
 };
 
-const HeroSection = () => {
-  const [email, setEmail] = useState("");
+// Headlines for rotation animation
+const headlines = [
+  {
+    text: "Your perfect event starts with",
+    highlight: "plannix",
+  },
+  {
+    text: "Design AI Enabled",
+    highlight: "Business Webpage",
+  },
+  {
+    text: "Event specific webpage with",
+    highlight: "Booking",
+  },
+];
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log("Email submitted:", email);
-    // Handle email submission
-  };
+const HeroSection = () => {
+  const [currentHeadline, setCurrentHeadline] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Rotate headlines every 4 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIsAnimating(true);
+      setTimeout(() => {
+        setCurrentHeadline((prev) => (prev + 1) % headlines.length);
+        setIsAnimating(false);
+      }, 500); // Half of animation duration for smooth transition
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
+    <>
     <section className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-900 via-green-900 to-slate-900">
       {/* Animated Background Gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-green-600/20 via-transparent to-emerald-600/20 animate-pulse" />
@@ -317,30 +344,39 @@ const HeroSection = () => {
       </div>
 
       {/* Gradient Overlays for Fade Effect */}
-      <div className="absolute inset-0 bg-gradient-to-r from-slate-900/80 via-transparent to-slate-900/80 pointer-events-none" />
-      <div className="absolute inset-0 bg-gradient-to-b from-slate-900/60 via-transparent to-slate-900/60 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-r from-slate-900/40 via-transparent to-slate-900/60 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-slate-900/40 via-transparent to-slate-900/30 pointer-events-none" />
 
       {/* Main Content */}
       <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 pt-20">
         {/* Logo Badge */}
         <div className="mb-6 animate-bounce-slow">
           <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20">
-            <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center">
-              <img src="/images/planix-logo.png" className="" />
+            <div className="w-8 h-8 p-1 rounded-lg bg-gradient-to-br from-gray-800 to-gray-500 flex items-center justify-center">
+              <img src="/images/plannix-logo.png" className="" />
             </div>
-            <span className="text-white/90 text-sm font-medium">planix</span>
+            <span className="text-white/90 text-sm font-medium">plannix</span>
           </div>
         </div>
 
         {/* Main Card */}
         <div className="max-w-xl w-full">
           <div className="bg-white rounded-3xl p-8 md:p-10 shadow-2xl shadow-black/20 transform hover:scale-[1.02] transition-all duration-500">
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight mb-4">
-              Your perfect event starts with{" "}
-              <span className="bg-gradient-to-r from-green-500 via-emerald-500 to-green-600 bg-clip-text text-transparent">
-                Planix
-              </span>
-            </h1>
+            {/* Animated Headline */}
+            <div className="h-[120px] md:h-[150px] overflow-hidden relative">
+              <h1
+                className={`text-4xl md:text-5xl font-bold text-gray-900 leading-tight mb-4 transition-all duration-500 ease-in-out ${
+                  isAnimating
+                    ? "opacity-0 transform -translate-y-4"
+                    : "opacity-100 transform translate-y-0"
+                }`}
+              >
+                {headlines[currentHeadline].text}{" "}
+                <span className="bg-gradient-to-r from-green-500 via-emerald-500 to-green-700 bg-clip-text text-transparent">
+                  {headlines[currentHeadline].highlight}
+                </span>
+              </h1>
+            </div>
             <p className="text-gray-600 text-lg mb-2">
               Plan any event – weddings, birthdays, parties & more.
             </p>
@@ -359,36 +395,39 @@ const HeroSection = () => {
               Get your event website ready in under 5 minutes.
             </p>
 
-            <form onSubmit={handleSubmit} className="relative">
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                className="w-full px-6 py-4 pr-14 rounded-full bg-gray-800 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-300"
-              />
+            {/* App Download Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              {/* Google Play Store Button */}
               <button
-                type="submit"
-                className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white flex items-center justify-center hover:bg-gray-100 hover:scale-110 transition-all duration-300 group"
+                onClick={() => setIsModalOpen(true)}
+                className="flex items-center justify-center gap-3 px-6 py-3 bg-gray-800 border border-gray-700 rounded-xl hover:bg-gray-700 hover:border-gray-600 hover:scale-105 transition-all duration-300 group"
               >
-                <svg
-                  className="w-5 h-5 text-gray-900 group-hover:translate-x-0.5 transition-transform"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M14 5l7 7m0 0l-7 7m7-7H3"
-                  />
+                <svg className="w-8 h-8" viewBox="0 0 512 512" fill="currentColor">
+                  <path d="M325.3 234.3L104.6 13l280.8 161.2-60.1 60.1zM47 0C34 6.8 25.3 19.2 25.3 35.3v441.3c0 16.1 8.7 28.5 21.7 35.3l256.6-256L47 0zm425.2 225.6l-58.9-34.1-65.7 64.5 65.7 64.5 60.1-34.1c18-14.3 18-46.5-1.2-60.8zM104.6 499l280.8-161.2-60.1-60.1L104.6 499z" fill="#ffffff"/>
                 </svg>
+                <div className="text-left">
+                  <p className="text-gray-400 text-xs">GET IT ON</p>
+                  <p className="text-white font-semibold text-sm">Google Play</p>
+                </div>
               </button>
-            </form>
+
+              {/* Apple App Store Button */}
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="flex items-center justify-center gap-3 px-6 py-3 bg-gray-800 border border-gray-700 rounded-xl hover:bg-gray-700 hover:border-gray-600 hover:scale-105 transition-all duration-300 group"
+              >
+                <svg className="w-8 h-8" viewBox="0 0 384 512" fill="#ffffff">
+                  <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/>
+                </svg>
+                <div className="text-left">
+                  <p className="text-gray-400 text-xs">Download on the</p>
+                  <p className="text-white font-semibold text-sm">App Store</p>
+                </div>
+              </button>
+            </div>
 
             <p className="text-gray-500 text-xs mt-4 text-center">
-              By signing up, you agree to receive updates and marketing emails.
+              Available on iOS and Android devices
             </p>
           </div>
         </div>
@@ -441,8 +480,18 @@ const HeroSection = () => {
       </div>
 
       {/* Bottom Gradient */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-slate-900 to-transparent pointer-events-none" />
+      <div
+        className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-slate-900/50
+       to-transparent pointer-events-none"
+      />
     </section>
+
+      {/* App Coming Soon Modal */}
+      <AppComingSoonModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
+    </>
   );
 };
 

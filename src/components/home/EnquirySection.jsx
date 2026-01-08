@@ -1,60 +1,99 @@
 import { useState } from "react";
 
-const eventTypes = [
-  { id: "wedding", label: "Wedding", icon: "💍" },
-  { id: "birthday", label: "Birthday", icon: "🎂" },
-  { id: "corporate", label: "Corporate", icon: "💼" },
-  { id: "anniversary", label: "Anniversary", icon: "💝" },
-  { id: "festive", label: "Festive", icon: "🎉" },
-  { id: "other", label: "Other", icon: "✨" },
-];
-
 const EnquirySection = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     phone: "",
-    eventType: "",
-    eventDate: "",
-    guestCount: "",
+    companyName: "",
+    businessType: "",
     message: "",
   });
+
+  const businessTypes = [
+    "Event Venue",
+    "Catering Service",
+    "Photography/Videography",
+    "Decoration & Florist",
+    "Entertainment & Music",
+    "Transportation",
+    "Other Services",
+  ];
   const [focusedField, setFocusedField] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
+
+  // Email API endpoint
+  const emailApiUrl = "https://vocoxp.staffhandler.com/vocoxp/tenant/tenant_backend/api/tenant/email";
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleEventTypeSelect = (eventId) => {
-    setFormData((prev) => ({ ...prev, eventType: eventId }));
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setSubmitError(null);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    try {
+      // Generate HTML email body
+      const emailHtml = `
+        <p>Dear Plannix Team,</p>
+        <p>You have received a new business enquiry from your website. Please find the details below:</p>
+        <h4>Enquiry Details:</h4>
+        <ul>
+            <li><strong>Name:</strong> ${formData.name}</li>
+            <li><strong>Email:</strong> ${formData.email}</li>
+            <li><strong>Phone:</strong> ${formData.phone || "N/A"}</li>
+            <li><strong>Company/Business Name:</strong> ${formData.companyName}</li>
+            <li><strong>Business Type:</strong> ${formData.businessType}</li>
+        </ul>
+        <h4>Message:</h4>
+        <p>${formData.message || "No message provided."}</p>
+        <p>Please respond to this enquiry at your earliest convenience.</p>
+        <p><b>Plannix Website<br>Automated Enquiry System</b></p>
+      `;
 
-    setIsSubmitting(false);
-    setIsSubmitted(true);
-
-    // Reset after showing success
-    setTimeout(() => {
-      setIsSubmitted(false);
-      setFormData({
-        name: "",
-        email: "",
-        phone: "",
-        eventType: "",
-        eventDate: "",
-        guestCount: "",
-        message: "",
+      // Send email via API
+      const response = await fetch(emailApiUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          to: "contact@plannix.in",
+          subject: `New Business Enquiry from ${formData.name} - ${formData.businessType}`,
+          html: emailHtml,
+          from: '"Plannix Website" <transactions@staffhandler.com>',
+        }),
       });
-    }, 3000);
+
+      if (!response.ok) {
+        throw new Error("Failed to send email");
+      }
+
+      setIsSubmitting(false);
+      setIsSubmitted(true);
+
+      // Reset after showing success
+      setTimeout(() => {
+        setIsSubmitted(false);
+        setFormData({
+          name: "",
+          email: "",
+          phone: "",
+          companyName: "",
+          businessType: "",
+          message: "",
+        });
+      }, 3000);
+    } catch (error) {
+      console.error("Email API Error:", error);
+      setIsSubmitting(false);
+      setSubmitError("Failed to send enquiry. Please try again.");
+    }
   };
 
   return (
@@ -105,9 +144,9 @@ const EnquirySection = () => {
               Let's Plan Together
             </span>
           </div>
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6 ">
             Ready to Create
-            <span className="block mt-2 bg-gradient-to-r from-green-400 via-emerald-400 to-green-500 bg-clip-text text-transparent">
+            <span className="block mt-2 pb-2 bg-gradient-to-r from-green-400 via-emerald-400 to-green-500 bg-clip-text text-transparent">
               Magic?
             </span>
           </h2>
@@ -126,7 +165,7 @@ const EnquirySection = () => {
               <div className="absolute -inset-0.5 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-500" />
               <div className="relative bg-gray-800/50 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
                 <h3 className="text-white font-semibold text-lg mb-4">
-                  Why Choose Planix?
+                  Why Choose plannix?
                 </h3>
                 <div className="space-y-4">
                   {[
@@ -178,29 +217,9 @@ const EnquirySection = () => {
                   Prefer to Talk?
                 </h3>
                 <div className="space-y-3">
+                
                   <a
-                    href="tel:+919876543210"
-                    className="flex items-center gap-3 text-gray-400 hover:text-green-400 transition-colors group/link"
-                  >
-                    <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center group-hover/link:bg-green-500/20 transition-colors">
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                        />
-                      </svg>
-                    </div>
-                    <span className="text-sm">+91 98765 43210</span>
-                  </a>
-                  <a
-                    href="mailto:hello@planix.com"
+                    href="mailto:contact@plannix.in"
                     className="flex items-center gap-3 text-gray-400 hover:text-green-400 transition-colors group/link"
                   >
                     <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center group-hover/link:bg-green-500/20 transition-colors">
@@ -218,7 +237,7 @@ const EnquirySection = () => {
                         />
                       </svg>
                     </div>
-                    <span className="text-sm">hello@planix.com</span>
+                    <span className="text-sm">contact@plannix.in</span>
                   </a>
                 </div>
               </div>
@@ -265,55 +284,6 @@ const EnquirySection = () => {
                 )}
 
                 {/* Event type selector */}
-                <div className="mb-8">
-                  <label className="block text-white font-medium text-sm mb-4">
-                    What are you planning?
-                  </label>
-                  <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
-                    {eventTypes.map((event) => (
-                      <button
-                        key={event.id}
-                        type="button"
-                        onClick={() => handleEventTypeSelect(event.id)}
-                        className={`group relative p-3 rounded-xl border transition-all duration-300 ${
-                          formData.eventType === event.id
-                            ? "bg-green-500/20 border-green-500/50 shadow-lg shadow-green-500/20"
-                            : "bg-white/5 border-white/10 hover:border-green-500/30 hover:bg-white/10"
-                        }`}
-                      >
-                        <div className="text-2xl mb-1 group-hover:scale-110 transition-transform duration-300">
-                          {event.icon}
-                        </div>
-                        <div
-                          className={`text-xs font-medium ${
-                            formData.eventType === event.id
-                              ? "text-green-400"
-                              : "text-gray-400"
-                          }`}
-                        >
-                          {event.label}
-                        </div>
-                        {formData.eventType === event.id && (
-                          <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
-                            <svg
-                              className="w-2.5 h-2.5 text-white"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                              strokeWidth={3}
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M5 13l4 4L19 7"
-                              />
-                            </svg>
-                          </div>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </div>
 
                 {/* Form fields grid */}
                 <div className="grid md:grid-cols-2 gap-6 mb-6">
@@ -385,42 +355,57 @@ const EnquirySection = () => {
                     />
                   </div>
 
-                  {/* Guest count field */}
+                  {/* Company Name field */}
                   <div className="relative">
                     <label
                       className={`absolute left-4 transition-all duration-300 pointer-events-none ${
-                        focusedField === "guestCount" || formData.guestCount
+                        focusedField === "companyName" || formData.companyName
                           ? "-top-2.5 text-xs text-green-400 bg-gray-800 px-2"
                           : "top-4 text-gray-500 text-sm"
                       }`}
                     >
-                      Expected Guests
+                      Company/Business Name
                     </label>
                     <input
-                      type="number"
-                      name="guestCount"
-                      value={formData.guestCount}
+                      type="text"
+                      name="companyName"
+                      value={formData.companyName}
                       onChange={handleInputChange}
-                      onFocus={() => setFocusedField("guestCount")}
+                      onFocus={() => setFocusedField("companyName")}
                       onBlur={() => setFocusedField(null)}
                       className="w-full px-4 py-4 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-green-500/50 focus:ring-2 focus:ring-green-500/20 transition-all duration-300"
-                      min="1"
+                      required
                     />
                   </div>
                 </div>
 
-                {/* Event date field */}
-                <div className="mb-6">
+                {/* Business Type field */}
+                <div className="relative mb-6">
                   <label className="block text-gray-400 text-sm mb-2">
-                    Event Date
+                    Business Type
                   </label>
-                  <input
-                    type="date"
-                    name="eventDate"
-                    value={formData.eventDate}
+                  <select
+                    name="businessType"
+                    value={formData.businessType}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-4 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-green-500/50 focus:ring-2 focus:ring-green-500/20 transition-all duration-300 [color-scheme:dark]"
-                  />
+                    className="w-full px-4 py-4 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-green-500/50 focus:ring-2 focus:ring-green-500/20 transition-all duration-300 appearance-none cursor-pointer"
+                    required
+                  >
+                    <option value="" disabled className="bg-gray-900">
+                      Select your business type
+                    </option>
+                    {businessTypes.map((type) => (
+                      <option key={type} value={type} className="bg-gray-900">
+                        {type}
+                      </option>
+                    ))}
+                  </select>
+                  {/* Custom dropdown arrow */}
+                  <div className="absolute right-4 top-[42px] pointer-events-none">
+                    <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
                 </div>
 
                 {/* Message field */}
