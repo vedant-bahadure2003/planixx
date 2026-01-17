@@ -259,7 +259,7 @@ const AboutSection = () => {
   const statCounters = [stat1, stat2, stat3, stat4];
 
   return (
-    <section id="about" className="relative py-32 overflow-hidden">
+    <section id="about" className="relative py-32 overflow-x-hidden">
       {/* Main Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-gray-950 via-slate-900 to-gray-950" />
 

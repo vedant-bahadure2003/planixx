@@ -4,21 +4,13 @@ const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   const footerLinks = {
-    product: [
-      { name: "Events", href: "#events" },
-    
-    ],
-    company: [
-      { name: "About Us", href: "#about" },
-     
-    ],
+    product: [{ name: "Events", href: "#events" }],
+    company: [{ name: "About Us", href: "#about" }],
     support: [
       { name: "Contact Us", href: "#enquiry" },
       { name: "Privacy Policy", href: "#privacy" },
     ],
   };
-
-  
 
   return (
     <footer className="relative bg-gradient-to-b from-gray-900 via-gray-900 to-black overflow-hidden">
@@ -45,18 +37,14 @@ const Footer = () => {
                 />
               </div>
               <span className="text-2xl font-bold bg-gradient-to-r from-green-500 via-emerald-500 to-green-600 bg-clip-text text-transparent">
-                lanix
+                lannix
               </span>
             </Link>
             <p className="text-gray-400 text-sm leading-relaxed mb-6 max-w-sm">
-              Transform your events into unforgettable experiences. plannix makes
-              event planning seamless, collaborative, and stress-free for
+              Transform your events into unforgettable experiences. plannix
+              makes event planning seamless, collaborative, and stress-free for
               everyone.
             </p>
-
-         
-
-          
           </div>
 
           {/* Product links */}
@@ -117,8 +105,6 @@ const Footer = () => {
             <p className="text-gray-500 text-sm">
               © {currentYear} plannix. All rights reserved.
             </p>
-           
-          
           </div>
         </div>
       </div>

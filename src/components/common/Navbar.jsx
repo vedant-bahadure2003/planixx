@@ -32,7 +32,7 @@ const Navbar = () => {
       // Section link (e.g., #events, #about)
       e.preventDefault();
       const sectionId = link.href.substring(1);
-      
+
       if (location.pathname === "/") {
         // On homepage, scroll to section
         const element = document.getElementById(sectionId);
@@ -47,7 +47,7 @@ const Navbar = () => {
   };
 
   const navLinks = [
-    { name: "Home", href: "/" , isRoute: true },
+    { name: "Home", href: "/", isRoute: true },
     { name: "Events", href: "#events" },
     { name: "About", href: "#about" },
     { name: "Contact", href: "#enquiry" },
@@ -77,7 +77,7 @@ const Navbar = () => {
                 isScrolled ? "" : "drop-shadow-lg"
               }`}
             >
-              lanix
+              lannix
             </span>
           </Link>
 
@@ -134,7 +134,7 @@ const Navbar = () => {
             >
               Business Inquiry
             </button>
-            <button 
+            <button
               onClick={() => setIsAppComingSoonOpen(true)}
               className="px-3 py-2 rounded-full text-sm font-semibold bg-gradient-to-r from-green-500 via-emerald-500 to-green-600 text-white shadow-lg shadow-green-500/30 hover:shadow-xl hover:shadow-green-500/40 hover:scale-105 transition-all duration-300"
             >
@@ -232,7 +232,7 @@ const Navbar = () => {
               >
                 Business Inquiry
               </button>
-              <button 
+              <button
                 onClick={() => {
                   setIsMobileMenuOpen(false);
                   setIsAppComingSoonOpen(true);
