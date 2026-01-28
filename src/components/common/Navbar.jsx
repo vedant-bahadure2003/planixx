@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import BusinessEnquiryModal from "./BusinessEnquiryModal";
 import AppComingSoonModal from "./AppComingSoonModal";
+import LocationSelectorModal from "./LocationSelectorModal";
+import { useLocation as useLocationContext } from "../../context/LocationContext";
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -10,6 +12,9 @@ const Navbar = () => {
   const [isAppComingSoonOpen, setIsAppComingSoonOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  
+  // Location context for city selection
+  const { selectedCity, isModalOpen, openModal, closeModal, selectCity } = useLocationContext();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -123,8 +128,9 @@ const Navbar = () => {
           </div>
 
           {/* CTA Buttons */}
-          <div className="hidden md:flex items-center gap-3">
-            <button
+          <div className="hidden md:flex items-center gap-4">
+          
+            {/* <button
               onClick={() => setIsBusinessModalOpen(true)}
               className={`px-3 py-2 rounded-full text-sm font-semibold border-2 transition-all duration-300 hover:scale-105 ${
                 isScrolled
@@ -133,12 +139,39 @@ const Navbar = () => {
               }`}
             >
               Business Inquiry
-            </button>
+            </button> */}
+          <a href="https://plannix.in/platform/login">
             <button
-              onClick={() => setIsAppComingSoonOpen(true)}
-              className="px-3 py-2 rounded-full text-sm font-semibold bg-gradient-to-r from-green-500 via-emerald-500 to-green-600 text-white shadow-lg shadow-green-500/30 hover:shadow-xl hover:shadow-green-500/40 hover:scale-105 transition-all duration-300"
+              className="px-5 py-2 rounded-full text-sm font-semibold bg-gradient-to-r from-green-500 via-emerald-500 to-green-600 text-white shadow-lg shadow-green-500/30 hover:shadow-xl hover:shadow-green-500/40 hover:scale-105 transition-all duration-300"
             >
-              Start Free Trial
+Sign Up            </button>
+          </a>
+            {/* Location Selector Button */}
+            <button
+              onClick={openModal}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium transition-all duration-300 hover:scale-105 group ${
+                isScrolled
+                  ? "bg-white/5 hover:bg-white/10 border border-white/10 text-white"
+                  : "bg-white/10 hover:bg-white/20 border border-white/20 text-white/90"
+              }`}
+            >
+              <svg
+                className="w-4 h-4 text-rose-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                />
+                <circle cx="12" cy="11" r="3" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
+              </svg>
+              <span className="max-w-[80px] truncate">
+                {selectedCity ? selectedCity.name : "City"}
+              </span>
             </button>
           </div>
 
@@ -170,10 +203,39 @@ const Navbar = () => {
         {/* Mobile Menu */}
         <div
           className={`md:hidden overflow-hidden transition-all duration-500 ${
-            isMobileMenuOpen ? "max-h-96 pb-6" : "max-h-0"
+            isMobileMenuOpen ? "max-h-[500px] pb-6" : "max-h-0"
           }`}
         >
           <div className="flex flex-col gap-2 pt-4">
+            {/* Mobile Location Selector */}
+            <button
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                openModal();
+              }}
+              className={`flex items-center gap-2 px-4 py-3 rounded-xl transition-all duration-300 ${
+                isScrolled
+                  ? "bg-rose-50 text-rose-600"
+                  : "bg-rose-500/20 text-rose-300"
+              }`}
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                />
+                <circle cx="12" cy="11" r="3" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
+              </svg>
+              <span className="font-medium">
+                {selectedCity ? selectedCity.name : "Select City"}
+              </span>
+              <svg className="w-4 h-4 ml-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+
             {navLinks.map((link) =>
               link.isStore ? (
                 <Link
@@ -256,6 +318,14 @@ const Navbar = () => {
       <AppComingSoonModal
         isOpen={isAppComingSoonOpen}
         onClose={() => setIsAppComingSoonOpen(false)}
+      />
+
+      {/* Location Selector Modal */}
+      <LocationSelectorModal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        onSelectCity={selectCity}
+        currentCity={selectedCity}
       />
     </nav>
   );

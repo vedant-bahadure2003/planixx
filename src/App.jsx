@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import { Landing, Store } from "./pages";
 import { Navbar, Footer } from "./components";
+import { LocationProvider } from "./context/LocationContext";
 
 // Component to scroll to top on route change, or to section if hash is present
 function ScrollToTop() {
@@ -28,7 +29,7 @@ function ScrollToTop() {
 
 function App() {
   return (
-    <>
+    <LocationProvider>
       <ScrollToTop />
       <Navbar />
       <Routes>
@@ -36,8 +37,9 @@ function App() {
         <Route path="/store" element={<Store />} />
       </Routes>
       <Footer />
-    </>
+    </LocationProvider>
   );
 }
 
 export default App;
+

@@ -1,18 +1,8 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useEvents } from "../../hooks/useEvents";
+import { useLocation as useLocationContext } from "../../context/LocationContext";
 
-// Cities data with gradient colors
-const citiesData = [
-  { id: "all", name: "All Cities", icon: "🌍", color: "from-emerald-500 to-green-500" },
-  { id: "delhi", name: "New Delhi", icon: "🏛️", color: "from-orange-500 to-red-500" },
-  { id: "mumbai", name: "Mumbai", icon: "🌊", color: "from-blue-500 to-indigo-500" },
-  { id: "bangalore", name: "Bangalore", icon: "💻", color: "from-purple-500 to-violet-500" },
-  { id: "jaipur", name: "Jaipur", icon: "🏰", color: "from-pink-500 to-rose-500" },
-  { id: "pune", name: "Pune", icon: "🎭", color: "from-teal-500 to-cyan-500" },
-  { id: "khajuraho", name: "Khajuraho", icon: "🛕", color: "from-amber-500 to-yellow-500" },
-  { id: "rishikesh", name: "Rishikesh", icon: "🧘", color: "from-green-500 to-lime-500" },
-];
-
-// Categories data with icons and colors
+// Categories data with icons and colors (kept static as per requirements)
 const categoriesData = [
   { id: "all", name: "All Categories", icon: "✨", color: "from-emerald-500 to-green-500" },
   { id: "Cultural", name: "Cultural", icon: "🎭", color: "from-orange-500 to-red-500" },
@@ -22,113 +12,6 @@ const categoriesData = [
   { id: "Festive", name: "Festive", icon: "🎉", color: "from-purple-500 to-pink-500" },
   { id: "Wellness", name: "Wellness", icon: "🧘", color: "from-teal-500 to-green-500" },
   { id: "Concert", name: "Concert", icon: "🎵", color: "from-red-500 to-orange-500" },
-];
-
-// Enhanced upcoming events data with city IDs
-const upcomingEventsData = [
-  {
-    id: 1,
-    title: "Khajuraho Dance Festival 2026",
-    date: "Feb 20-26, 2026",
-    dateValue: "2026-02-20",
-    cityId: "khajuraho",
-    location: "UNESCO World Heritage Site, Khajuraho, MP",
-    description:
-      "India's premier classical dance festival celebrating 52 years of heritage. Experience mesmerizing performances from India's finest classical dancers at the magnificent Khajuraho Temples.",
-    attendees: 5000,
-    category: "Cultural",
-    image: "https://khajuraho.staffhandler.com/images/banner-image2.webp",
-    color: "from-orange-500 to-red-600",
-  },
-  {
-    id: 2,
-    title: "Tech Summit 2026",
-    date: "Jan 22, 2026",
-    dateValue: "2026-01-22",
-    cityId: "bangalore",
-    location: "Bangalore Convention Center",
-    description:
-      "The biggest tech conference of the year featuring keynotes from industry leaders, workshops, networking sessions, and cutting-edge product launches.",
-    attendees: 2000,
-    category: "Corporate",
-    image:
-      "https://in.nau.edu/wp-content/uploads/sites/162/2025/09/Tech-Summit-2026-Header-600x267.jpg",
-    color: "from-blue-500 to-indigo-600",
-  },
-  {
-    id: 3,
-    title: "Business Expo 2026",
-    date: "Feb 5-8, 2026",
-    dateValue: "2026-02-05",
-    cityId: "delhi",
-    location: "Pragati Maidan, New Delhi",
-    description:
-      "India's largest business and technology exposition featuring 500+ exhibitors, networking opportunities, and keynote sessions from industry leaders across multiple sectors.",
-    attendees: 25000,
-    category: "Expo",
-    image:
-      "https://img2.chinadaily.com.cn/images/202305/26/64704543a310b60580cdbf02.jpeg",
-    color: "from-blue-600 to-cyan-500",
-  },
-  {
-    id: 4,
-    title: "Golden Anniversary Gala",
-    date: "Feb 14, 2026",
-    dateValue: "2026-02-14",
-    cityId: "jaipur",
-    location: "Heritage Resort, Jaipur",
-    description:
-      "Celebrating 50 years of love and togetherness. An elegant evening of memories, family, friends, and the renewal of vows in a stunning heritage setting.",
-    attendees: 200,
-    category: "Anniversary",
-    image: "https://www.oyorooms.com/blog/wp-content/uploads/2018/03/fe-15.jpg",
-    color: "from-yellow-500 to-amber-600",
-  },
-  {
-    id: 5,
-    title: "Holi Festival Party",
-    date: "Mar 14, 2026",
-    dateValue: "2026-03-14",
-    cityId: "pune",
-    location: "Garden Estate, Pune",
-    description:
-      "Experience the festival of colors like never before! DJ music, organic colors, traditional sweets, thandai bar, and non-stop dancing.",
-    attendees: 800,
-    category: "Festive",
-    image:
-      "https://media.istockphoto.com/id/1381030718/photo/barsana-holi-one-of-the-most-joyful-festival-of-india-this-is-birth-place-of-radha-lord.jpg?s=612x612&w=0&k=20&c=c0kcjHpSFJXg7F4D6s8Ez-7RWY3MjoIrwsiRQKScank=",
-    color: "from-purple-500 to-pink-600",
-  },
-  {
-    id: 6,
-    title: "International Yoga Day Retreat",
-    date: "Jun 21, 2026",
-    dateValue: "2026-06-21",
-    cityId: "rishikesh",
-    location: "Rishikesh Yoga Valley, Uttarakhand",
-    description:
-      "Celebrate International Yoga Day with sunrise sessions by the Ganges, Ayurvedic wellness programs, and teachings from renowned yoga masters in the yoga capital of the world.",
-    attendees: 1500,
-    category: "Wellness",
-    image:
-      "https://images.unsplash.com/photo-1545205597-3d9d02c29597?w=600&h=400&fit=crop",
-    color: "from-teal-500 to-green-600",
-  },
-  {
-    id: 7,
-    title: "Bollywood Music Night",
-    date: "Apr 10, 2026",
-    dateValue: "2026-04-10",
-    cityId: "mumbai",
-    location: "Juhu Beach Arena, Mumbai",
-    description:
-      "A star-studded night featuring live performances from Bollywood's biggest music icons. Dance to chart-topping hits under the stars.",
-    attendees: 10000,
-    category: "Concert",
-    image:
-      "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600&h=400&fit=crop",
-    color: "from-red-500 to-orange-600",
-  },
 ];
 
 // Maximum events for 3D carousel mode
@@ -146,8 +29,15 @@ const shuffleArray = (array) => {
 };
 
 const UpcomingEvents = () => {
+  // API data from hook
+  const { events, cities: dynamicCities, loading, error, refetch, getNearbyEvents, userLocation, locationDenied } = useEvents();
+  
+  // Global location context
+  const { selectedCity: globalSelectedCity } = useLocationContext();
+  
   const [selectedCity, setSelectedCity] = useState("all");
   const [selectedMonth, setSelectedMonth] = useState("all");
+  const [selectedDate, setSelectedDate] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [activeIndex, setActiveIndex] = useState(0);
   const [rotationY, setRotationY] = useState(0);
@@ -161,7 +51,7 @@ const UpcomingEvents = () => {
   const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false);
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const [sliderScrollPosition, setSliderScrollPosition] = useState(0);
-  const [randomizedEvents, setRandomizedEvents] = useState([]);
+  const [defaultNearbyEvents, setDefaultNearbyEvents] = useState([]);
   const containerRef = useRef(null);
   const carouselRef = useRef(null);
   const sliderRef = useRef(null);
@@ -169,11 +59,50 @@ const UpcomingEvents = () => {
   const cityDropdownRef = useRef(null);
   const categoryDropdownRef = useRef(null);
 
-  // Initialize with 6 random events on mount
+  // Use dynamic cities from API
+  const citiesData = dynamicCities.length > 0 ? dynamicCities : [
+    { id: "all", name: "All Cities", icon: "🌍", color: "from-emerald-500 to-green-500" }
+  ];
+
+  // Initialize default nearby events when data loads
   useEffect(() => {
-    const shuffled = shuffleArray(upcomingEventsData);
-    setRandomizedEvents(shuffled.slice(0, DEFAULT_DISPLAY_COUNT));
-  }, []);
+    if (events.all.length > 0 && defaultNearbyEvents.length === 0) {
+      if (userLocation && !locationDenied) {
+        // Show nearby events
+        const nearby = getNearbyEvents(events.all, DEFAULT_DISPLAY_COUNT);
+        setDefaultNearbyEvents(nearby);
+      } else {
+        // Fallback to random events
+        const shuffled = shuffleArray(events.all);
+        setDefaultNearbyEvents(shuffled.slice(0, DEFAULT_DISPLAY_COUNT));
+      }
+    }
+  }, [events.all, userLocation, locationDenied, getNearbyEvents, defaultNearbyEvents.length]);
+
+  // Update nearby events when location becomes available
+  useEffect(() => {
+    if (userLocation && events.all.length > 0) {
+      const nearby = getNearbyEvents(events.all, DEFAULT_DISPLAY_COUNT);
+      setDefaultNearbyEvents(nearby);
+    }
+  }, [userLocation, events.all, getNearbyEvents]);
+
+  // Sync with global city selection from Navbar/Modal
+  useEffect(() => {
+    if (globalSelectedCity) {
+      // Try to match with dynamic cities from API
+      const matchedCity = dynamicCities.find(c => 
+        c.name.toLowerCase() === globalSelectedCity.name.toLowerCase() ||
+        c.id === globalSelectedCity.id
+      );
+      if (matchedCity) {
+        setSelectedCity(matchedCity.id);
+      } else {
+        // If no exact match, filter by city name
+        setSelectedCity(globalSelectedCity.id);
+      }
+    }
+  }, [globalSelectedCity, dynamicCities]);
 
   // Months for filtering
   const months = useMemo(() => [
@@ -193,23 +122,33 @@ const UpcomingEvents = () => {
   ], []);
 
   // Check if any filter is active
-  const hasActiveFilters = selectedCity !== "all" || selectedMonth !== "all" || selectedCategory !== "all";
+  const hasActiveFilters = selectedCity !== "all" || selectedMonth !== "all" || selectedCategory !== "all" || selectedDate !== "";
 
-  // Filter events based on selected city, month, and category
+  // Filter events based on selected city, month, date, and category
   const filteredEvents = useMemo(() => {
-    // If no filters are active, show randomized events
+    // If no filters are active, show nearby/default events
     if (!hasActiveFilters) {
-      return randomizedEvents;
+      return defaultNearbyEvents;
     }
     
     // Otherwise, filter from all events
-    return upcomingEventsData.filter((event) => {
+    return events.all.filter((event) => {
       const cityMatch = selectedCity === "all" || event.cityId === selectedCity;
       const monthMatch = selectedMonth === "all" || event.dateValue.split("-")[1] === selectedMonth;
       const categoryMatch = selectedCategory === "all" || event.category === selectedCategory;
-      return cityMatch && monthMatch && categoryMatch;
+      
+      // Date filter - check if selected date falls within event date range
+      let dateMatch = true;
+      if (selectedDate) {
+        const selected = new Date(selectedDate);
+        const eventStart = new Date(event.dateValue);
+        const eventEnd = new Date(event.dateTill || event.dateValue);
+        dateMatch = selected >= eventStart && selected <= eventEnd;
+      }
+      
+      return cityMatch && monthMatch && categoryMatch && dateMatch;
     });
-  }, [selectedCity, selectedMonth, selectedCategory, hasActiveFilters, randomizedEvents]);
+  }, [selectedCity, selectedMonth, selectedCategory, selectedDate, hasActiveFilters, defaultNearbyEvents, events.all]);
 
   // Determine if we should use 3D carousel or horizontal slider
   const useCarousel = filteredEvents.length <= MAX_CAROUSEL_EVENTS;
@@ -227,7 +166,7 @@ const UpcomingEvents = () => {
     if (sliderRef.current) {
       sliderRef.current.scrollLeft = 0;
     }
-  }, [selectedCity, selectedMonth, selectedCategory]);
+  }, [selectedCity, selectedMonth, selectedCategory, selectedDate]);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -403,6 +342,7 @@ const UpcomingEvents = () => {
   const clearAllFilters = () => {
     setSelectedCity("all");
     setSelectedMonth("all");
+    setSelectedDate("");
     setSelectedCategory("all");
   };
 
@@ -412,23 +352,90 @@ const UpcomingEvents = () => {
 
   // Get event counts for filters
   const getCityEventCount = useCallback((cityId) => {
-    if (cityId === "all") return upcomingEventsData.length;
-    return upcomingEventsData.filter(e => e.cityId === cityId).length;
-  }, []);
+    if (cityId === "all") return events.all.length;
+    return events.all.filter(e => e.cityId === cityId).length;
+  }, [events.all]);
 
   const getCategoryEventCount = useCallback((categoryId) => {
-    if (categoryId === "all") return upcomingEventsData.length;
-    return upcomingEventsData.filter(e => e.category === categoryId).length;
-  }, []);
+    if (categoryId === "all") return events.all.length;
+    return events.all.filter(e => e.category === categoryId).length;
+  }, [events.all]);
 
   const getMonthEventCount = useCallback((monthId) => {
     if (monthId === "all") return filteredEvents.length;
-    return upcomingEventsData.filter(e => 
+    return events.all.filter(e => 
       (selectedCity === "all" || e.cityId === selectedCity) &&
       (selectedCategory === "all" || e.category === selectedCategory) &&
       e.dateValue.split("-")[1] === monthId
     ).length;
-  }, [selectedCity, selectedCategory, filteredEvents.length]);
+  }, [selectedCity, selectedCategory, filteredEvents.length, events.all]);
+
+  // Loading state
+  if (loading) {
+    return (
+      <section
+        id="events"
+        className="relative min-h-screen bg-gradient-to-br from-gray-950 via-slate-900 to-gray-950 py-20 overflow-hidden"
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center mb-12">
+            <span className="inline-block px-4 py-2 rounded-full bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30 text-green-300 text-sm font-medium mb-4">
+              ✨ Coming Soon
+            </span>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
+              Upcoming{" "}
+              <span className="bg-gradient-to-r from-green-400 via-emerald-400 to-green-500 bg-clip-text text-transparent">
+                Events
+              </span>
+            </h2>
+          </div>
+          <div className="flex flex-col items-center justify-center py-20">
+            <div className="w-16 h-16 border-4 border-green-500/30 border-t-green-500 rounded-full animate-spin mb-6" />
+            <p className="text-gray-400">Loading events...</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <section
+        id="events"
+        className="relative min-h-screen bg-gradient-to-br from-gray-950 via-slate-900 to-gray-950 py-20 overflow-hidden"
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center mb-12">
+            <span className="inline-block px-4 py-2 rounded-full bg-gradient-to-r from-red-500/20 to-orange-500/20 border border-red-500/30 text-red-300 text-sm font-medium mb-4">
+              ⚠️ Error
+            </span>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
+              Upcoming{" "}
+              <span className="bg-gradient-to-r from-green-400 via-emerald-400 to-green-500 bg-clip-text text-transparent">
+                Events
+              </span>
+            </h2>
+          </div>
+          <div className="flex flex-col items-center justify-center py-20">
+            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-red-800 to-red-900 flex items-center justify-center mb-6 border border-red-500/30">
+              <svg className="w-12 h-12 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <h3 className="text-2xl font-bold text-white mb-2">Failed to Load Events</h3>
+            <p className="text-gray-400 text-center max-w-md mb-6">{error}</p>
+            <button 
+              onClick={refetch}
+              className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-medium rounded-xl hover:from-green-600 hover:to-emerald-600 transition-all duration-300 shadow-lg shadow-green-500/25"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section
@@ -463,7 +470,9 @@ const UpcomingEvents = () => {
             </span>
           </h2>
           <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-            Discover and explore the most anticipated events in your city.
+            {userLocation && !locationDenied 
+              ? "Discover events near you and across the country."
+              : "Discover and explore the most anticipated events in your city."}
           </p>
         </div>
 
@@ -589,24 +598,52 @@ const UpcomingEvents = () => {
                   )}
                 </div>
 
-                {/* Month Pills */}
+                {/* Date and Month Filters */}
                 <div className="flex-1">
                   <label className="block text-xs font-semibold text-green-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
-                    Select Month
+                    Select Date
                   </label>
+                  
+                  {/* Date Input */}
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    <input
+                      type="date"
+                      value={selectedDate}
+                      onChange={(e) => {
+                        setSelectedDate(e.target.value);
+                        if (e.target.value) {
+                          setSelectedMonth("all"); // Clear month when date is selected
+                        }
+                      }}
+                      className="bg-gray-900/80 border border-white/10 hover:border-green-500/50 rounded-xl px-4 py-2 text-white text-sm font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-green-500/40 [color-scheme:dark]"
+                    />
+                    {selectedDate && (
+                      <button
+                        onClick={() => setSelectedDate("")}
+                        className="px-3 py-2 bg-gray-800/60 text-gray-400 hover:text-white rounded-xl text-sm transition-all duration-200 border border-white/10"
+                      >
+                        Clear Date
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Month Pills */}
                   <div className="flex flex-wrap gap-2">
                     {months.slice(0, 7).map((month) => {
                       const count = getMonthEventCount(month.id);
                       return (
                         <button
                           key={month.id}
-                          onClick={() => setSelectedMonth(month.id)}
+                          onClick={() => {
+                            setSelectedMonth(month.id);
+                            setSelectedDate(""); // Clear date when month is selected
+                          }}
                           disabled={count === 0 && month.id !== "all"}
                           className={`relative px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
-                            selectedMonth === month.id
+                            selectedMonth === month.id && !selectedDate
                               ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/30"
                               : count > 0
                                 ? "bg-gray-800/60 text-gray-300 hover:bg-gray-700/70 hover:text-white border border-white/10"
@@ -632,10 +669,12 @@ const UpcomingEvents = () => {
                   <div className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse shadow-lg shadow-green-500/50" />
                   <span className="text-gray-400">
                     Showing <span className="text-white font-bold">{filteredEvents.length}</span>
-                    {!hasActiveFilters && <span className="text-gray-500"> random</span>} events
+                    {!hasActiveFilters && userLocation && <span className="text-gray-500"> nearby</span>}
+                    {!hasActiveFilters && !userLocation && <span className="text-gray-500"> random</span>} events
                     {selectedCity !== "all" && <> in <span className="text-green-400 font-medium">{selectedCityData?.name}</span></>}
                     {selectedCategory !== "all" && <> • <span className="text-green-400 font-medium">{selectedCategoryData?.name}</span></>}
-                    {selectedMonth !== "all" && <> • <span className="text-green-400 font-medium">{months.find(m => m.id === selectedMonth)?.name}</span></>}
+                    {selectedMonth !== "all" && !selectedDate && <> • <span className="text-green-400 font-medium">{months.find(m => m.id === selectedMonth)?.name}</span></>}
+                    {selectedDate && <> • <span className="text-green-400 font-medium">{new Date(selectedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span></>}
                   </span>
                 </div>
                 {hasActiveFilters && (
