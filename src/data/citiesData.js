@@ -1,15 +1,14 @@
-// Popular cities with custom SVG-style illustrations (using emoji for compatibility)
+// Popular cities with custom icons from /city-icons folder
 export const popularCities = [
-  { id: 'mumbai', name: 'Mumbai', icon: '🏛️', color: 'from-orange-500 to-red-500' },
-  { id: 'delhi-ncr', name: 'Delhi-NCR', icon: '🕌', color: 'from-red-500 to-rose-500' },
-  { id: 'bengaluru', name: 'Bengaluru', icon: '🏰', color: 'from-purple-500 to-violet-500' },
-  { id: 'hyderabad', name: 'Hyderabad', icon: '🗼', color: 'from-pink-500 to-rose-500' },
-  { id: 'chandigarh', name: 'Chandigarh', icon: '🌳', color: 'from-green-500 to-emerald-500' },
-  { id: 'ahmedabad', name: 'Ahmedabad', icon: '🕋', color: 'from-amber-500 to-yellow-500' },
-  { id: 'pune', name: 'Pune', icon: '⛩️', color: 'from-blue-500 to-cyan-500' },
-  { id: 'chennai', name: 'Chennai', icon: '🛕', color: 'from-teal-500 to-green-500' },
-  { id: 'kolkata', name: 'Kolkata', icon: '🌉', color: 'from-indigo-500 to-purple-500' },
-  { id: 'kochi', name: 'Kochi', icon: '🌴', color: 'from-cyan-500 to-blue-500' },
+  { id: 'mumbai', name: 'Mumbai', icon: '/city-icons/mumbai.png', color: 'from-orange-500 to-red-500' },
+  { id: 'delhi-ncr', name: 'Delhi-NCR', icon: '/city-icons/delhi-ncr.png', color: 'from-red-500 to-rose-500' },
+  { id: 'bengaluru', name: 'Bengaluru', icon: '/city-icons/bangluru.png', color: 'from-purple-500 to-violet-500' },
+  { id: 'hyderabad', name: 'Hyderabad', icon: '/city-icons/hydrabad.png', color: 'from-pink-500 to-rose-500' },
+  { id: 'chandigarh', name: 'Chandigarh', icon: '/city-icons/chandigargh.png', color: 'from-green-500 to-emerald-500' },
+  { id: 'ahmedabad', name: 'Ahmedabad', icon: '/city-icons/ahd.png', color: 'from-amber-500 to-yellow-500' },
+  { id: 'pune', name: 'Pune', icon: '/city-icons/pune.png', color: 'from-blue-500 to-cyan-500' },
+  { id: 'chennai', name: 'Chennai', icon: '/city-icons/chennai.png', color: 'from-teal-500 to-green-500' },
+  { id: 'kolkata', name: 'Kolkata', icon: '/city-icons/kolkata.png', color: 'from-indigo-500 to-purple-500' },
 ];
 
 // All other cities in alphabetical order

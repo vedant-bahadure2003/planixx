@@ -507,7 +507,11 @@ const UpcomingEvents = () => {
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2.5">
-                        <span className="text-xl">{selectedCityData?.icon}</span>
+                        {selectedCityData?.icon?.startsWith('/') ? (
+                          <img src={selectedCityData.icon} alt={selectedCityData.name} className="w-6 h-6 object-contain" />
+                        ) : (
+                          <span className="text-xl">{selectedCityData?.icon}</span>
+                        )}
                         <span className="text-white font-medium">{selectedCityData?.name}</span>
                       </div>
                       <svg className={`w-5 h-5 text-gray-400 transition-transform duration-300 ${isCityDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -532,7 +536,11 @@ const UpcomingEvents = () => {
                                 : "hover:bg-white/10 text-gray-300 hover:text-white"
                             }`}
                           >
-                            <span className="text-xl">{city.icon}</span>
+                            {city.icon?.startsWith('/') ? (
+                              <img src={city.icon} alt={city.name} className="w-6 h-6 object-contain" />
+                            ) : (
+                              <span className="text-xl">{city.icon}</span>
+                            )}
                             <span className="font-medium flex-1 text-left">{city.name}</span>
                             <span className={`text-xs px-2 py-1 rounded-full font-medium ${selectedCity === city.id ? "bg-white/20" : "bg-gray-700/80 text-gray-300"}`}>
                               {getCityEventCount(city.id)}
@@ -782,7 +790,7 @@ const UpcomingEvents = () => {
                   style={{ perspective: "800px", perspectiveOrigin: "50% 50%" }}
                 >
                   <div
-                    className="relative w-56 h-36 md:w-64 md:h-40"
+                    className="relative w-56 h-36 md:w-64 md:h-40 "
                     style={{
                       transformStyle: "preserve-3d",
                       transform: `rotateX(${rotationX}deg) rotateY(${rotationY}deg)`,
@@ -833,7 +841,7 @@ const UpcomingEvents = () => {
                   {filteredEvents.map((event, index) => {
                     const isActive = index === activeIndex;
                     return (
-                      <div key={event.id} onClick={() => goToSlide(index)} className={`flex-shrink-0 w-72 h-48 md:w-80 md:h-52 rounded-2xl overflow-hidden cursor-pointer transition-all duration-500 snap-center ${isActive ? "ring-2 ring-green-400 shadow-lg shadow-green-500/25 scale-105" : "opacity-80 hover:opacity-100"}`}>
+                      <div key={event.id} onClick={() => goToSlide(index)} className={`flex-shrink-0 w-72 h-48 md:w-80 md:h-52 rounded-2xl overflow-hidden cursor-pointer transition-all  duration-500 snap-center ${isActive ? "ring-2 ring-green-400  shadow-lg shadow-green-500/25 scale-105 mt-2 mb-2" : "opacity-80 hover:opacity-100"}`}> 
                         <div className="relative w-full h-full group">
                           <img src={event.image} alt={event.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />

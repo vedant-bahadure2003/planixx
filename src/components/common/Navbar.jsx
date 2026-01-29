@@ -217,8 +217,8 @@ Sign Up            </button>
                 isScrolled
                   ? "bg-rose-50 text-rose-600"
                   : "bg-rose-500/20 text-rose-300"
-              }`}
-            >
+              }`}>
+                
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   strokeLinecap="round"

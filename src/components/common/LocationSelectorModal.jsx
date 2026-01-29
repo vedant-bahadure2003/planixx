@@ -261,8 +261,8 @@ const LocationSelectorModal = ({ isOpen, onClose, onSelectCity, currentCity }) =
                     }`}
                   >
                     <div className={`relative w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br ${city.color} p-0.5 group-hover:scale-110 transition-transform duration-300`}>
-                      <div className="w-full h-full bg-gray-900 rounded-xl flex items-center justify-center text-lg sm:text-xl">
-                        {city.icon}
+                      <div className="w-full h-full bg-gray-900 rounded-xl flex items-center justify-center overflow-hidden">
+                        <img src={city.icon} alt={city.name} className="w-6 h-6 sm:w-12 sm:h-12 object-contain" />
                       </div>
                       {currentCity?.id === city.id && (
                         <div className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
@@ -296,8 +296,8 @@ const LocationSelectorModal = ({ isOpen, onClose, onSelectCity, currentCity }) =
                       currentCity?.name === cityName
                         ? 'bg-green-500/20 text-green-400 font-medium'
                         : 'text-gray-400 hover:text-white hover:bg-white/5'
-                    }`}
-                  >
+                    }`}>
+                  
                     {cityName}
                   </button>
                 ))}

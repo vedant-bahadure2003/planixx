@@ -105,6 +105,25 @@ const Footer = () => {
             <p className="text-gray-500 text-sm">
               © {currentYear} plannix. All rights reserved.
             </p>
+              <a
+                        href="https://microintegrated.in/web/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 px-4 py-2 rounded-full bg-white/5 backdrop-blur-sm border border-white/10 hover:border-[#F59E0B]/50 hover:bg-white/10 transition-all duration-300 group"
+                    >
+                        <span className="text-white/50 text-xs uppercase tracking-wider">Technology Partner</span>
+                        <div className="w-px h-4 bg-white/20"></div>
+                        <div className="flex items-center gap-2">
+                            <img
+                                src="/images/mtss_logo_2.png"
+                                alt="Micro Integrated Logo"
+                                className="h-6 w-auto object-contain group-hover:scale-110 transition-transform duration-300"
+                            />
+                            <span className="text-white font-semibold text-sm group-hover:text-[#F59E0B] transition-colors">
+                                Micro Integrated Semiconductor Systems
+                            </span>
+                        </div>
+                    </a>
           </div>
         </div>
       </div>
