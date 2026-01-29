@@ -1,8 +1,21 @@
-import { useEffect } from "react";
+import { useEffect, lazy, Suspense } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
-import { Landing, Store } from "./pages";
 import { Navbar, Footer } from "./components";
 import { LocationProvider } from "./context/LocationContext";
+
+// Lazy load route components for better initial load performance
+const Landing = lazy(() => import("./pages/Landing/Landing"));
+const Store = lazy(() => import("./pages/Store/Store"));
+
+// Minimal loading fallback component
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-950 via-slate-900 to-gray-950">
+    <div className="flex flex-col items-center gap-4">
+      <div className="w-12 h-12 border-4 border-green-500/30 border-t-green-500 rounded-full animate-spin" />
+      <p className="text-gray-400 text-sm">Loading...</p>
+    </div>
+  </div>
+);
 
 // Component to scroll to top on route change, or to section if hash is present
 function ScrollToTop() {
@@ -32,14 +45,15 @@ function App() {
     <LocationProvider>
       <ScrollToTop />
       <Navbar />
-      <Routes>
-        <Route path="/" element={<Landing />} />
-        <Route path="/store" element={<Store />} />
-      </Routes>
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          <Route path="/store" element={<Store />} />
+        </Routes>
+      </Suspense>
       <Footer />
     </LocationProvider>
   );
 }
 
 export default App;
-

@@ -1,0 +1,11 @@
+# robots.txt for Plannix Event Planning Platform
+# https://plannix.in
+
+User-agent: *
+Allow: /
+
+# Disallow API endpoints and internal paths
+Disallow: /api/
+
+# Sitemap location
+Sitemap: https://plannix.in/sitemap.xml

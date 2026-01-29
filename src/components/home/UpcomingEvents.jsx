@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, memo } from "react";
 import { useEvents } from "../../hooks/useEvents";
 import { useLocation as useLocationContext } from "../../context/LocationContext";
 
@@ -18,7 +18,7 @@ const categoriesData = [
 const MAX_CAROUSEL_EVENTS = 6;
 const DEFAULT_DISPLAY_COUNT = 6;
 
-// Fisher-Yates shuffle algorithm
+// Fisher-Yates shuffle algorithm - memoized outside component
 const shuffleArray = (array) => {
   const shuffled = [...array];
   for (let i = shuffled.length - 1; i > 0; i--) {
@@ -28,6 +28,59 @@ const shuffleArray = (array) => {
   return shuffled;
 };
 
+// Memoized Event Card for carousel
+const CarouselEventCard = memo(({ event, index, anglePerItem, translateZ, isActive, onSelect }) => {
+  const angle = index * anglePerItem;
+  return (
+    <div
+      className="absolute inset-0 cursor-pointer"
+      style={{ transformStyle: "preserve-3d", transform: `rotateY(${angle}deg) translateZ(${translateZ}px)` }}
+      onClick={() => onSelect(index)}
+    >
+      <div className={`w-full h-full rounded-lg overflow-hidden shadow-2xl transition-all duration-500 ${isActive ? "shadow-md shadow-green-300 border border-green-700" : "opacity-90"}`} style={{ backfaceVisibility: "visible" }}>
+        <div className="relative w-full h-full">
+          <img src={event.image} alt={event.title} className="w-full h-full object-cover pointer-events-none" draggable="false" loading="lazy" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+          <div className={`absolute inset-0 bg-gradient-to-br ${event.color} opacity-30 mix-blend-overlay`} />
+          <div className="absolute bottom-0 left-0 right-0 p-3">
+            <span className="inline-block px-2 py-0.5 rounded-full text-[9px] font-semibold bg-white/20 backdrop-blur-sm text-white mb-1">{event.category}</span>
+            <h4 className="text-white font-bold text-xs leading-tight">{event.title}</h4>
+          </div>
+          {isActive && <div className="absolute inset-0 rounded-lg ring-2 ring-green-400/60" />}
+        </div>
+      </div>
+      <div className="absolute left-0 w-full pointer-events-none" style={{ top: "105%", height: "70%" }}>
+        <img src={event.image} alt="" className="w-full h-full object-cover object-top rounded-lg" draggable="false" loading="lazy" style={{ opacity: 0.35, filter: "blur(1px)", maskImage: "linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, transparent 80%)", WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, transparent 80%)" }} />
+      </div>
+    </div>
+  );
+});
+CarouselEventCard.displayName = 'CarouselEventCard';
+
+// Memoized Event Card for slider
+const SliderEventCard = memo(({ event, index, isActive, onSelect }) => (
+  <div 
+    onClick={() => onSelect(index)} 
+    className={`flex-shrink-0 w-72 h-48 md:w-80 md:h-52 rounded-2xl overflow-hidden cursor-pointer transition-all duration-500 snap-center ${isActive ? "ring-2 ring-green-400 shadow-lg shadow-green-500/25 scale-105 mt-2 mb-2" : "opacity-80 hover:opacity-100"}`}
+  > 
+    <div className="relative w-full h-full group">
+      <img src={event.image} alt={event.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+      <div className={`absolute inset-0 bg-gradient-to-br ${event.color} opacity-20 mix-blend-overlay`} />
+      <div className="absolute bottom-0 left-0 right-0 p-4">
+        <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-white/20 backdrop-blur-sm text-white mb-2">{event.category}</span>
+        <h4 className="text-white font-bold text-sm md:text-base leading-tight mb-1">{event.title}</h4>
+        <div className="flex items-center gap-2 text-gray-300 text-xs">
+          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+          {event.date}
+        </div>
+      </div>
+      {isActive && <div className="absolute top-3 right-3 w-3 h-3 rounded-full bg-green-400 animate-pulse" />}
+    </div>
+  </div>
+));
+SliderEventCard.displayName = 'SliderEventCard';
+
 const UpcomingEvents = () => {
   // API data from hook
   const { events, cities: dynamicCities, loading, error, refetch, getNearbyEvents, userLocation, locationDenied } = useEvents();
@@ -35,10 +88,9 @@ const UpcomingEvents = () => {
   // Global location context
   const { selectedCity: globalSelectedCity } = useLocationContext();
   
-  const [selectedCity, setSelectedCity] = useState("all");
-  const [selectedMonth, setSelectedMonth] = useState("all");
+  const [selectedCity, setSelectedCity] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedCategory, setSelectedCategory] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
   const [rotationY, setRotationY] = useState(0);
   const [rotationX, setRotationX] = useState(-15);
@@ -48,96 +100,97 @@ const UpcomingEvents = () => {
   const [startY, setStartY] = useState(0);
   const [currentRotationY, setCurrentRotationY] = useState(0);
   const [currentRotationX, setCurrentRotationX] = useState(-15);
-  const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false);
-  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const [sliderScrollPosition, setSliderScrollPosition] = useState(0);
   const [defaultNearbyEvents, setDefaultNearbyEvents] = useState([]);
+  const [isInitialized, setIsInitialized] = useState(false);
   const containerRef = useRef(null);
   const carouselRef = useRef(null);
   const sliderRef = useRef(null);
   const autoPlayTimerRef = useRef(null);
-  const cityDropdownRef = useRef(null);
-  const categoryDropdownRef = useRef(null);
 
-  // Use dynamic cities from API
-  const citiesData = dynamicCities.length > 0 ? dynamicCities : [
-    { id: "all", name: "All Cities", icon: "🌍", color: "from-emerald-500 to-green-500" }
-  ];
+  // Use dynamic cities from API - memoized
+  const citiesData = useMemo(() => 
+    dynamicCities.length > 0 ? dynamicCities : [
+      { id: "all", name: "All Cities", icon: "🌍", color: "from-emerald-500 to-green-500" }
+    ], [dynamicCities]);
 
-  // Initialize default nearby events when data loads
+  // Initialize default nearby events when data loads - consolidated effect
   useEffect(() => {
-    if (events.all.length > 0 && defaultNearbyEvents.length === 0) {
+    if (events.all.length > 0 && !isInitialized) {
+      let eventsToShow;
       if (userLocation && !locationDenied) {
-        // Show nearby events
-        const nearby = getNearbyEvents(events.all, DEFAULT_DISPLAY_COUNT);
-        setDefaultNearbyEvents(nearby);
+        eventsToShow = getNearbyEvents(events.all, DEFAULT_DISPLAY_COUNT);
       } else {
-        // Fallback to random events
-        const shuffled = shuffleArray(events.all);
-        setDefaultNearbyEvents(shuffled.slice(0, DEFAULT_DISPLAY_COUNT));
+        eventsToShow = shuffleArray(events.all).slice(0, DEFAULT_DISPLAY_COUNT);
       }
+      setDefaultNearbyEvents(eventsToShow);
+      setIsInitialized(true);
     }
-  }, [events.all, userLocation, locationDenied, getNearbyEvents, defaultNearbyEvents.length]);
+  }, [events.all, userLocation, locationDenied, getNearbyEvents, isInitialized]);
 
-  // Update nearby events when location becomes available
+  // Update nearby events when location becomes available after initialization
   useEffect(() => {
-    if (userLocation && events.all.length > 0) {
+    if (userLocation && events.all.length > 0 && isInitialized) {
       const nearby = getNearbyEvents(events.all, DEFAULT_DISPLAY_COUNT);
       setDefaultNearbyEvents(nearby);
     }
-  }, [userLocation, events.all, getNearbyEvents]);
+  }, [userLocation, events.all, getNearbyEvents, isInitialized]);
 
   // Sync with global city selection from Navbar/Modal
   useEffect(() => {
     if (globalSelectedCity) {
-      // Try to match with dynamic cities from API
-      const matchedCity = dynamicCities.find(c => 
-        c.name.toLowerCase() === globalSelectedCity.name.toLowerCase() ||
-        c.id === globalSelectedCity.id
-      );
-      if (matchedCity) {
-        setSelectedCity(matchedCity.id);
-      } else {
-        // If no exact match, filter by city name
-        setSelectedCity(globalSelectedCity.id);
-      }
+      setSelectedCity(globalSelectedCity.id);
     }
-  }, [globalSelectedCity, dynamicCities]);
-
-  // Months for filtering
-  const months = useMemo(() => [
-    { id: "all", name: "All Months", short: "All" },
-    { id: "01", name: "January", short: "Jan" },
-    { id: "02", name: "February", short: "Feb" },
-    { id: "03", name: "March", short: "Mar" },
-    { id: "04", name: "April", short: "Apr" },
-    { id: "05", name: "May", short: "May" },
-    { id: "06", name: "June", short: "Jun" },
-    { id: "07", name: "July", short: "Jul" },
-    { id: "08", name: "August", short: "Aug" },
-    { id: "09", name: "September", short: "Sep" },
-    { id: "10", name: "October", short: "Oct" },
-    { id: "11", name: "November", short: "Nov" },
-    { id: "12", name: "December", short: "Dec" },
-  ], []);
+  }, [globalSelectedCity]);
 
   // Check if any filter is active
-  const hasActiveFilters = selectedCity !== "all" || selectedMonth !== "all" || selectedCategory !== "all" || selectedDate !== "";
+  const hasActiveFilters = useMemo(() => 
+    (selectedCity !== "" && selectedCity !== "all") || 
+    (selectedCategory !== "" && selectedCategory !== "all") || 
+    selectedDate !== ""
+  , [selectedCity, selectedCategory, selectedDate]);
+  
+  // Check if user has made any selection from dropdowns
+  const hasUserSelectedFilters = useMemo(() => 
+    selectedCity !== "" || selectedCategory !== ""
+  , [selectedCity, selectedCategory]);
 
-  // Filter events based on selected city, month, date, and category
+  // Compute selected city data - memoized
+  const selectedCityData = useMemo(() => {
+    const fromDynamic = citiesData.find((c) => c.id === selectedCity);
+    if (fromDynamic) return fromDynamic;
+    if (globalSelectedCity && globalSelectedCity.id === selectedCity) return globalSelectedCity;
+    return null;
+  }, [citiesData, selectedCity, globalSelectedCity]);
+
+  // Helper function for fuzzy city matching - memoized
+  const isCityMatch = useCallback((eventCityName, selectedCityName) => {
+    if (!selectedCityName || !eventCityName) return false;
+    const eventCity = eventCityName.toLowerCase();
+    const filterCity = selectedCityName.toLowerCase();
+    return eventCity.includes(filterCity) || filterCity.includes(eventCity);
+  }, []);
+
+  // Filter events based on selected city, date, and category - optimized
   const filteredEvents = useMemo(() => {
-    // If no filters are active, show nearby/default events
-    if (!hasActiveFilters) {
+    // If user hasn't made any selection, show nearby/default events
+    if (!hasUserSelectedFilters && !selectedDate) {
       return defaultNearbyEvents;
     }
     
-    // Otherwise, filter from all events
+    const selectedCityName = selectedCityData?.name;
+    
     return events.all.filter((event) => {
-      const cityMatch = selectedCity === "all" || event.cityId === selectedCity;
-      const monthMatch = selectedMonth === "all" || event.dateValue.split("-")[1] === selectedMonth;
-      const categoryMatch = selectedCategory === "all" || event.category === selectedCategory;
+      // City match
+      let cityMatch = selectedCity === "all" || selectedCity === "";
+      if (!cityMatch && selectedCityName) {
+        cityMatch = isCityMatch(event.cityName, selectedCityName);
+      }
       
-      // Date filter - check if selected date falls within event date range
+      // Category match
+      const categoryMatch = selectedCategory === "all" || selectedCategory === "" || event.category === selectedCategory;
+      
+      // Date filter
       let dateMatch = true;
       if (selectedDate) {
         const selected = new Date(selectedDate);
@@ -146,17 +199,22 @@ const UpcomingEvents = () => {
         dateMatch = selected >= eventStart && selected <= eventEnd;
       }
       
-      return cityMatch && monthMatch && categoryMatch && dateMatch;
+      return cityMatch && categoryMatch && dateMatch;
     });
-  }, [selectedCity, selectedMonth, selectedCategory, selectedDate, hasActiveFilters, defaultNearbyEvents, events.all]);
+  }, [selectedCity, selectedCategory, selectedDate, hasUserSelectedFilters, defaultNearbyEvents, events.all, selectedCityData, isCityMatch]);
 
   // Determine if we should use 3D carousel or horizontal slider
   const useCarousel = filteredEvents.length <= MAX_CAROUSEL_EVENTS;
 
-  // Calculate dynamic carousel properties
-  const totalItems = filteredEvents.length;
-  const anglePerItem = totalItems > 0 ? 360 / totalItems : 0;
-  const translateZ = totalItems <= 3 ? 180 : totalItems <= 5 ? 220 : 250;
+  // Calculate dynamic carousel properties - memoized
+  const carouselProps = useMemo(() => {
+    const totalItems = filteredEvents.length;
+    const anglePerItem = totalItems > 0 ? 360 / totalItems : 0;
+    const translateZ = totalItems <= 3 ? 180 : totalItems <= 5 ? 220 : 250;
+    return { totalItems, anglePerItem, translateZ };
+  }, [filteredEvents.length]);
+
+  const { totalItems, anglePerItem, translateZ } = carouselProps;
 
   // Reset active index when filters change
   useEffect(() => {
@@ -166,21 +224,7 @@ const UpcomingEvents = () => {
     if (sliderRef.current) {
       sliderRef.current.scrollLeft = 0;
     }
-  }, [selectedCity, selectedMonth, selectedCategory, selectedDate]);
-
-  // Close dropdowns when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (cityDropdownRef.current && !cityDropdownRef.current.contains(event.target)) {
-        setIsCityDropdownOpen(false);
-      }
-      if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(event.target)) {
-        setIsCategoryDropdownOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [selectedCity, selectedCategory, selectedDate]);
 
   // Auto-rotation for carousel mode
   useEffect(() => {
@@ -233,8 +277,8 @@ const UpcomingEvents = () => {
     return () => clearInterval(scrollInterval);
   }, [useCarousel, isAutoPlaying, sliderScrollPosition, totalItems]);
 
-  // Carousel drag handlers
-  const handleMouseDown = (e) => {
+  // Carousel drag handlers - memoized
+  const handleMouseDown = useCallback((e) => {
     if (!useCarousel) return;
     e.preventDefault();
     setIsDragging(true);
@@ -243,7 +287,7 @@ const UpcomingEvents = () => {
     setStartY(e.clientY);
     setCurrentRotationY(rotationY);
     setCurrentRotationX(rotationX);
-  };
+  }, [useCarousel, rotationY, rotationX]);
 
   const handleMouseMove = useCallback(
     (e) => {
@@ -269,12 +313,12 @@ const UpcomingEvents = () => {
     }
   }, [isDragging, totalItems, useCarousel, rotationY, anglePerItem]);
 
-  const handleMouseLeave = () => {
+  const handleMouseLeave = useCallback(() => {
     if (isDragging) handleMouseUp();
-  };
+  }, [isDragging, handleMouseUp]);
 
-  // Touch handlers
-  const handleTouchStart = (e) => {
+  // Touch handlers - memoized
+  const handleTouchStart = useCallback((e) => {
     if (!useCarousel) return;
     e.preventDefault();
     setIsDragging(true);
@@ -283,7 +327,7 @@ const UpcomingEvents = () => {
     setStartY(e.touches[0].clientY);
     setCurrentRotationY(rotationY);
     setCurrentRotationX(rotationX);
-  };
+  }, [useCarousel, rotationY, rotationX]);
 
   const handleTouchMove = useCallback(
     (e) => {
@@ -298,9 +342,9 @@ const UpcomingEvents = () => {
     [isDragging, useCarousel, startX, startY, currentRotationY, currentRotationX]
   );
 
-  const handleTouchEnd = () => handleMouseUp();
+  const handleTouchEnd = useCallback(() => handleMouseUp(), [handleMouseUp]);
 
-  const goToSlide = (index) => {
+  const goToSlide = useCallback((index) => {
     if (useCarousel) {
       setRotationY(-index * anglePerItem);
     } else if (sliderRef.current) {
@@ -311,9 +355,9 @@ const UpcomingEvents = () => {
     setActiveIndex(index);
     setIsAutoPlaying(false);
     setTimeout(() => setIsAutoPlaying(true), 3000);
-  };
+  }, [useCarousel, anglePerItem]);
 
-  const scrollSlider = (direction) => {
+  const scrollSlider = useCallback((direction) => {
     if (!sliderRef.current) return;
     const slider = sliderRef.current;
     const scrollAmount = 320;
@@ -326,9 +370,9 @@ const UpcomingEvents = () => {
     setActiveIndex(Math.floor(newPosition / scrollAmount));
     setIsAutoPlaying(false);
     setTimeout(() => setIsAutoPlaying(true), 3000);
-  };
+  }, [sliderScrollPosition]);
 
-  const handleSliderScroll = () => {
+  const handleSliderScroll = useCallback(() => {
     if (sliderRef.current) {
       const scrollLeft = sliderRef.current.scrollLeft;
       setSliderScrollPosition(scrollLeft);
@@ -337,38 +381,18 @@ const UpcomingEvents = () => {
         setActiveIndex(newIndex);
       }
     }
-  };
+  }, [activeIndex, totalItems]);
 
-  const clearAllFilters = () => {
-    setSelectedCity("all");
-    setSelectedMonth("all");
+  const clearAllFilters = useCallback(() => {
+    setSelectedCity("");
     setSelectedDate("");
-    setSelectedCategory("all");
-  };
+    setSelectedCategory("");
+  }, []);
 
   const activeEvent = filteredEvents[activeIndex] || null;
-  const selectedCityData = citiesData.find((c) => c.id === selectedCity);
-  const selectedCategoryData = categoriesData.find((c) => c.id === selectedCategory);
-
-  // Get event counts for filters
-  const getCityEventCount = useCallback((cityId) => {
-    if (cityId === "all") return events.all.length;
-    return events.all.filter(e => e.cityId === cityId).length;
-  }, [events.all]);
-
-  const getCategoryEventCount = useCallback((categoryId) => {
-    if (categoryId === "all") return events.all.length;
-    return events.all.filter(e => e.category === categoryId).length;
-  }, [events.all]);
-
-  const getMonthEventCount = useCallback((monthId) => {
-    if (monthId === "all") return filteredEvents.length;
-    return events.all.filter(e => 
-      (selectedCity === "all" || e.cityId === selectedCity) &&
-      (selectedCategory === "all" || e.category === selectedCategory) &&
-      e.dateValue.split("-")[1] === monthId
-    ).length;
-  }, [selectedCity, selectedCategory, filteredEvents.length, events.all]);
+  const selectedCategoryData = useMemo(() => 
+    categoriesData.find((c) => c.id === selectedCategory)
+  , [selectedCategory]);
 
   // Loading state
   if (loading) {
@@ -478,195 +502,108 @@ const UpcomingEvents = () => {
 
         {/* Filter Controls - Optimized Glass Design */}
         <div className="mb-12 relative z-30">
-          <div className="max-w-5xl mx-auto">
+          <div className="max-w-4xl mx-auto">
             {/* Background Card - decorative only */}
             <div className="absolute inset-0 bg-gradient-to-r from-white/5 via-white/10 to-white/5 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl">
               <div className="absolute top-0 left-0 w-20 h-20 bg-gradient-to-br from-green-500/20 to-transparent rounded-tl-2xl" />
               <div className="absolute bottom-0 right-0 w-20 h-20 bg-gradient-to-tl from-emerald-500/20 to-transparent rounded-br-2xl" />
             </div>
             
-            {/* Filter Content - with overflow visible for dropdowns */}
+            {/* Filter Content */}
             <div className="relative p-6">
-              {/* Filter Row */}
-              <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 items-start">
+              {/* Filter Row - 3 Column Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
                 
                 {/* City Dropdown */}
-                <div ref={cityDropdownRef} className="relative w-full lg:w-56 z-40">
+                <div className="relative z-40">
                   <label className="block text-xs font-semibold text-green-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                     </svg>
                     Select City
                   </label>
-                  <button
-                    onClick={() => {
-                      setIsCityDropdownOpen(!isCityDropdownOpen);
-                      setIsCategoryDropdownOpen(false);
-                    }}
-                    className="w-full bg-gray-900/80 hover:bg-gray-800/90 border border-white/10 hover:border-green-500/50 rounded-xl px-4 py-3 text-left transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-green-500/40"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2.5">
-                        {selectedCityData?.icon?.startsWith('/') ? (
-                          <img src={selectedCityData.icon} alt={selectedCityData.name} className="w-6 h-6 object-contain" />
-                        ) : (
-                          <span className="text-xl">{selectedCityData?.icon}</span>
-                        )}
-                        <span className="text-white font-medium">{selectedCityData?.name}</span>
-                      </div>
-                      <svg className={`w-5 h-5 text-gray-400 transition-transform duration-300 ${isCityDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <div className="relative">
+                    <select
+                      value={selectedCity}
+                      onChange={(e) => setSelectedCity(e.target.value)}
+                      className="w-full bg-gray-900/80 hover:bg-gray-800/90 border border-white/10 hover:border-green-500/50 rounded-xl px-4 py-3 text-white font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-green-500/40 appearance-none cursor-pointer"
+                      style={{ colorScheme: 'dark' }}
+                    >
+                      <option value="" className="bg-gray-900 text-gray-400 py-2">
+                        🌍 Select City...
+                      </option>
+                      {citiesData.map((city) => (
+                        <option key={city.id} value={city.id} className="bg-gray-900 text-white py-2">
+                          {city.icon?.startsWith('/') ? '' : city.icon} {city.name} 
+                        </option>
+                      ))}
+                    </select>
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                      <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                       </svg>
                     </div>
-                  </button>
-                  
-                  {isCityDropdownOpen && (
-                    <div className="absolute left-0 right-0 mt-2 bg-gray-900 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl animate-fadeIn" style={{zIndex: 9999}}>
-                      <div className="max-h-72 overflow-y-auto custom-scrollbar p-2">
-                        {citiesData.map((city) => (
-                          <button
-                            key={city.id}
-                            onClick={() => {
-                              setSelectedCity(city.id);
-                              setIsCityDropdownOpen(false);
-                            }}
-                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                              selectedCity === city.id
-                                ? `bg-gradient-to-r ${city.color} text-white shadow-lg`
-                                : "hover:bg-white/10 text-gray-300 hover:text-white"
-                            }`}
-                          >
-                            {city.icon?.startsWith('/') ? (
-                              <img src={city.icon} alt={city.name} className="w-6 h-6 object-contain" />
-                            ) : (
-                              <span className="text-xl">{city.icon}</span>
-                            )}
-                            <span className="font-medium flex-1 text-left">{city.name}</span>
-                            <span className={`text-xs px-2 py-1 rounded-full font-medium ${selectedCity === city.id ? "bg-white/20" : "bg-gray-700/80 text-gray-300"}`}>
-                              {getCityEventCount(city.id)}
-                            </span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                  </div>
                 </div>
 
                 {/* Category Dropdown */}
-                <div ref={categoryDropdownRef} className="relative w-full lg:w-56 z-40">
+                <div className="relative z-40">
                   <label className="block text-xs font-semibold text-green-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                     </svg>
                     Select Category
                   </label>
-                  <button
-                    onClick={() => {
-                      setIsCategoryDropdownOpen(!isCategoryDropdownOpen);
-                      setIsCityDropdownOpen(false);
-                    }}
-                    className="w-full bg-gray-900/80 hover:bg-gray-800/90 border border-white/10 hover:border-green-500/50 rounded-xl px-4 py-3 text-left transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-green-500/40"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2.5">
-                        <span className="text-xl">{selectedCategoryData?.icon}</span>
-                        <span className="text-white font-medium">{selectedCategoryData?.name}</span>
-                      </div>
-                      <svg className={`w-5 h-5 text-gray-400 transition-transform duration-300 ${isCategoryDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <div className="relative">
+                    <select
+                      value={selectedCategory}
+                      onChange={(e) => setSelectedCategory(e.target.value)}
+                      className="w-full bg-gray-900/80 hover:bg-gray-800/90 border border-white/10 hover:border-green-500/50 rounded-xl px-4 py-3 text-white font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-green-500/40 appearance-none cursor-pointer"
+                      style={{ colorScheme: 'dark' }}
+                    >
+                      <option value="" className="bg-gray-900 text-gray-400 py-2">
+                        ✨ Select Category...
+                      </option>
+                      {categoriesData.map((category) => (
+                        <option key={category.id} value={category.id} className="bg-gray-900 text-white py-2">
+                          {category.icon} {category.name} 
+                        </option>
+                      ))}
+                    </select>
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                      <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                       </svg>
                     </div>
-                  </button>
-                  
-                  {isCategoryDropdownOpen && (
-                    <div className="absolute left-0 right-0 mt-2 bg-gray-900 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl animate-fadeIn" style={{zIndex: 9999}}>
-                      <div className="max-h-72 overflow-y-auto custom-scrollbar p-2">
-                        {categoriesData.map((category) => (
-                          <button
-                            key={category.id}
-                            onClick={() => {
-                              setSelectedCategory(category.id);
-                              setIsCategoryDropdownOpen(false);
-                            }}
-                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                              selectedCategory === category.id
-                                ? `bg-gradient-to-r ${category.color} text-white shadow-lg`
-                                : "hover:bg-white/10 text-gray-300 hover:text-white"
-                            }`}
-                          >
-                            <span className="text-xl">{category.icon}</span>
-                            <span className="font-medium flex-1 text-left">{category.name}</span>
-                            <span className={`text-xs px-2 py-1 rounded-full font-medium ${selectedCategory === category.id ? "bg-white/20" : "bg-gray-700/80 text-gray-300"}`}>
-                              {getCategoryEventCount(category.id)}
-                            </span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                  </div>
                 </div>
 
-                {/* Date and Month Filters */}
-                <div className="flex-1">
+                {/* Date Filter */}
+                <div className="relative z-40">
                   <label className="block text-xs font-semibold text-green-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                     Select Date
                   </label>
-                  
-                  {/* Date Input */}
-                  <div className="flex flex-wrap gap-2 mb-3">
+                  <div className="flex gap-2">
                     <input
                       type="date"
                       value={selectedDate}
-                      onChange={(e) => {
-                        setSelectedDate(e.target.value);
-                        if (e.target.value) {
-                          setSelectedMonth("all"); // Clear month when date is selected
-                        }
-                      }}
-                      className="bg-gray-900/80 border border-white/10 hover:border-green-500/50 rounded-xl px-4 py-2 text-white text-sm font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-green-500/40 [color-scheme:dark]"
+                      onChange={(e) => setSelectedDate(e.target.value)}
+                      className="flex-1 bg-gray-900/80 border border-white/10 hover:border-green-500/50 rounded-xl px-4 py-3 text-white text-sm font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-green-500/40 [color-scheme:dark]"
                     />
                     {selectedDate && (
                       <button
                         onClick={() => setSelectedDate("")}
-                        className="px-3 py-2 bg-gray-800/60 text-gray-400 hover:text-white rounded-xl text-sm transition-all duration-200 border border-white/10"
+                        className="px-3 py-2 bg-gray-800/60 text-gray-400 hover:text-white rounded-xl text-sm transition-all duration-200 border border-white/10 hover:border-green-500/30"
+                        title="Clear Date"
                       >
-                        Clear Date
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
                       </button>
                     )}
-                  </div>
-
-                  {/* Month Pills */}
-                  <div className="flex flex-wrap gap-2">
-                    {months.slice(0, 7).map((month) => {
-                      const count = getMonthEventCount(month.id);
-                      return (
-                        <button
-                          key={month.id}
-                          onClick={() => {
-                            setSelectedMonth(month.id);
-                            setSelectedDate(""); // Clear date when month is selected
-                          }}
-                          disabled={count === 0 && month.id !== "all"}
-                          className={`relative px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
-                            selectedMonth === month.id && !selectedDate
-                              ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/30"
-                              : count > 0
-                                ? "bg-gray-800/60 text-gray-300 hover:bg-gray-700/70 hover:text-white border border-white/10"
-                                : "bg-gray-900/40 text-gray-600 cursor-not-allowed border border-white/5"
-                          }`}
-                        >
-                          {month.short}
-                          {count > 0 && selectedMonth !== month.id && month.id !== "all" && (
-                            <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-green-500 rounded-full text-[9px] flex items-center justify-center text-white font-bold shadow-lg">
-                              {count}
-                            </span>
-                          )}
-                        </button>
-                      );
-                    })}
                   </div>
                 </div>
               </div>
@@ -679,9 +616,8 @@ const UpcomingEvents = () => {
                     Showing <span className="text-white font-bold">{filteredEvents.length}</span>
                     {!hasActiveFilters && userLocation && <span className="text-gray-500"> nearby</span>}
                     {!hasActiveFilters && !userLocation && <span className="text-gray-500"> random</span>} events
-                    {selectedCity !== "all" && <> in <span className="text-green-400 font-medium">{selectedCityData?.name}</span></>}
-                    {selectedCategory !== "all" && <> • <span className="text-green-400 font-medium">{selectedCategoryData?.name}</span></>}
-                    {selectedMonth !== "all" && !selectedDate && <> • <span className="text-green-400 font-medium">{months.find(m => m.id === selectedMonth)?.name}</span></>}
+                    {selectedCity !== "" && selectedCity !== "all" && <> in <span className="text-green-400 font-medium">{selectedCityData?.name}</span></>}
+                    {selectedCategory !== "" && selectedCategory !== "all" && <> • <span className="text-green-400 font-medium">{selectedCategoryData?.name}</span></>}
                     {selectedDate && <> • <span className="text-green-400 font-medium">{new Date(selectedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span></>}
                   </span>
                 </div>
@@ -797,34 +733,17 @@ const UpcomingEvents = () => {
                       transition: isDragging ? "none" : "transform 0.8s cubic-bezier(0.4, 0, 0.2, 1)",
                     }}
                   >
-                    {filteredEvents.map((event, index) => {
-                      const angle = index * anglePerItem;
-                      const isActive = index === activeIndex;
-                      return (
-                        <div
-                          key={event.id}
-                          className="absolute inset-0 cursor-pointer"
-                          style={{ transformStyle: "preserve-3d", transform: `rotateY(${angle}deg) translateZ(${translateZ}px)` }}
-                          onClick={() => goToSlide(index)}
-                        >
-                          <div className={`w-full h-full rounded-lg overflow-hidden shadow-2xl transition-all duration-500 ${isActive ? "shadow-md shadow-green-300 border border-green-700" : "opacity-90"}`} style={{ backfaceVisibility: "visible" }}>
-                            <div className="relative w-full h-full">
-                              <img src={event.image} alt={event.title} className="w-full h-full object-cover pointer-events-none" draggable="false" loading="lazy" />
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                              <div className={`absolute inset-0 bg-gradient-to-br ${event.color} opacity-30 mix-blend-overlay`} />
-                              <div className="absolute bottom-0 left-0 right-0 p-3">
-                                <span className="inline-block px-2 py-0.5 rounded-full text-[9px] font-semibold bg-white/20 backdrop-blur-sm text-white mb-1">{event.category}</span>
-                                <h4 className="text-white font-bold text-xs leading-tight">{event.title}</h4>
-                              </div>
-                              {isActive && <div className="absolute inset-0 rounded-lg ring-2 ring-green-400/60" />}
-                            </div>
-                          </div>
-                          <div className="absolute left-0 w-full pointer-events-none" style={{ top: "105%", height: "70%" }}>
-                            <img src={event.image} alt="" className="w-full h-full object-cover object-top rounded-lg" draggable="false" loading="lazy" style={{ opacity: 0.35, filter: "blur(1px)", maskImage: "linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, transparent 80%)", WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, transparent 80%)" }} />
-                          </div>
-                        </div>
-                      );
-                    })}
+                    {filteredEvents.map((event, index) => (
+                      <CarouselEventCard
+                        key={event.id}
+                        event={event}
+                        index={index}
+                        anglePerItem={anglePerItem}
+                        translateZ={translateZ}
+                        isActive={index === activeIndex}
+                        onSelect={goToSlide}
+                      />
+                    ))}
                   </div>
                 </div>
                 <div className="absolute bottom-20 left-1/2 -translate-x-1/2 w-80 h-20 rounded-full bg-green-500/10 blur-2xl pointer-events-none" />
@@ -838,27 +757,15 @@ const UpcomingEvents = () => {
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                 </button>
                 <div ref={sliderRef} onScroll={handleSliderScroll} className="flex gap-6 overflow-x-auto pb-4 px-2 snap-x snap-mandatory slider-hide-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                  {filteredEvents.map((event, index) => {
-                    const isActive = index === activeIndex;
-                    return (
-                      <div key={event.id} onClick={() => goToSlide(index)} className={`flex-shrink-0 w-72 h-48 md:w-80 md:h-52 rounded-2xl overflow-hidden cursor-pointer transition-all  duration-500 snap-center ${isActive ? "ring-2 ring-green-400  shadow-lg shadow-green-500/25 scale-105 mt-2 mb-2" : "opacity-80 hover:opacity-100"}`}> 
-                        <div className="relative w-full h-full group">
-                          <img src={event.image} alt={event.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
-                          <div className={`absolute inset-0 bg-gradient-to-br ${event.color} opacity-20 mix-blend-overlay`} />
-                          <div className="absolute bottom-0 left-0 right-0 p-4">
-                            <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-white/20 backdrop-blur-sm text-white mb-2">{event.category}</span>
-                            <h4 className="text-white font-bold text-sm md:text-base leading-tight mb-1">{event.title}</h4>
-                            <div className="flex items-center gap-2 text-gray-300 text-xs">
-                              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                              {event.date}
-                            </div>
-                          </div>
-                          {isActive && <div className="absolute top-3 right-3 w-3 h-3 rounded-full bg-green-400 animate-pulse" />}
-                        </div>
-                      </div>
-                    );
-                  })}
+                  {filteredEvents.map((event, index) => (
+                    <SliderEventCard
+                      key={event.id}
+                      event={event}
+                      index={index}
+                      isActive={index === activeIndex}
+                      onSelect={goToSlide}
+                    />
+                  ))}
                 </div>
                 <div className="mt-6 flex justify-center">
                   <div className="w-32 h-1 bg-gray-800 rounded-full overflow-hidden">
